@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Painel de URLs Encurtadas</title>
+</head>
+<body>
+    <h1>URLs Encurtadas</h1>
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Original</th>
+            <th>Curta</th>
+            <th>Criador</th>
+            <th>Data</th>
+            <th>Ações</th>
+        </tr>
+        {% for url in urls %}
+        <tr>
+            <td><a href="{{ url[0] }}" target="_blank">{{ url[0] }}</a></td>
+            <td><a href="/{{ url[1] }}" target="_blank">{{ host }}{{ url[1] }}</a></td>
+            <td>{{ url[2] }}</td>
+            <td>{{ url[3] }}</td>
+            <td><a href="{{ url_for('delete_url', short_id=url[1]) }}">Excluir</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <a href="/">Voltar</a>
+</body>
+</html>
