@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Erro - Encurtador de URL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .error-container {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .error-url {
+            font-style: italic;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .back-button:hover {
+            background-color: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        {% if error_type == "malicious" %}
+            <h2>❌ URL Maliciosa Detectada</h2>
+            <p>A URL fornecida foi detectada como potencialmente maliciosa e foi bloqueada por motivos de segurança.</p>
+            <div class="error-url">URL: {{ original_url }}</div>
+        {% elif error_type == "invalid" %}
+            <h2>❌ URL Inválida</h2>
+            <p>A URL fornecida não possui um formato válido.</p>
+            <div class="error-url">URL: {{ original_url }}</div>
+            <p>Certifique-se de incluir <strong>http://</strong> ou <strong>https://</strong> no início da URL.</p>
+        {% elif error_type == "save_error" %}
+            <h2>❌ Erro ao Salvar</h2>
+            <p>Ocorreu um erro ao salvar a URL no banco de dados. Tente novamente mais tarde.</p>
+        {% elif error_type == "not_found" %}
+            <h2>❌ URL Não Encontrada</h2>
+            <p>A URL que você está procurando não existe ou foi removida.</p>
+        {% else %}
+            <h2>❌ Erro Desconhecido</h2>
+            <p>Ocorreu um erro inesperado. Tente novamente mais tarde.</p>
+        {% endif %}
+    </div>
+    
+    <a href="/" class="back-button">⬅ Voltar para página inicial</a>
+</body>
+</html>
