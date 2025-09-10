@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for, jsonify
 import os
 
 # Importar nossas classes de responsabilidades específicas
@@ -14,6 +14,29 @@ app.config['SECRET_KEY'] = Config.SECRET_KEY
 db = Database()
 url_shortener = URLShortener()
 template_renderer = TemplateRenderer()
+
+
+# Rota de API para encurtar URL e retornar JSON
+@app.route('/api/shorten', methods=['POST'])
+def api_shorten():
+    data = request.get_json()
+    if not data or 'url' not in data:
+        return jsonify({'error': 'missing_url'}), 400
+    original_url = data.get('url')
+    criador = data.get('criador', '')
+
+    if not url_shortener.validate_url(original_url):
+        return jsonify({'error': 'invalid_url'}), 400
+
+    if not url_shortener.is_url_safe(original_url):
+        return jsonify({'error': 'malicious_url'}), 400
+
+    short_id = url_shortener.generate_unique_short_id(db.short_id_exists)
+
+    if not db.save_url(original_url, short_id, criador):
+        return jsonify({'error': 'save_error'}), 500
+
+    return jsonify({'urlEncurtada': short_id}), 201
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
