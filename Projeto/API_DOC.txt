@@ -1,0 +1,154 @@
+# Documentação da API - Encurtador de URL
+
+Esta documentação explica como utilizar a API REST do encurtador de URL, incluindo exemplos de requisições e respostas.
+
+---
+
+## 1. Encurtar uma URL
+
+### Endpoint
+```
+POST /
+```
+
+### Content-Type
+- application/json
+
+### Parâmetros (JSON)
+| Campo      | Tipo   | Obrigatório | Descrição                |
+|------------|--------|-------------|--------------------------|
+| url        | string | Sim         | URL original a encurtar  |
+| criador    | string | Não         | Nome do criador (opcional, default: "api") |
+
+### Exemplo de Requisição
+```
+POST / HTTP/1.1
+Host: localhost:5000
+Content-Type: application/json
+
+{
+  "url": "https://www.exemplo.com",
+  "criador": "empresaX"
+}
+```
+
+### Exemplo de Resposta (Sucesso)
+```
+Status: 201 Created
+Content-Type: application/json
+
+{
+  "urlEncurtada": "uMqaaq",
+  "urlCompleta": "http://localhost:5000/uMqaaq"
+}
+```
+
+### Exemplo de Resposta (Erro)
+```
+Status: 400 Bad Request
+Content-Type: application/json
+
+{
+  "error": "URL inválida"
+}
+```
+
+---
+
+## 2. Redirecionar para a URL original
+
+### Endpoint
+```
+GET /<short_id>
+```
+
+### Parâmetros
+- short_id: O código da URL encurtada
+
+### Exemplo
+```
+GET /uMqaaq
+```
+
+- Se existir, redireciona para a URL original.
+- Se não existir, retorna página de erro 404.
+
+---
+
+## 3. Consultar URLs pelo nome do criador (**NOVA ROTA**)
+
+### Endpoint
+```
+GET /api/urls?criador=<nome>
+```
+
+### Parâmetros de Query
+| Parâmetro | Tipo   | Obrigatório | Descrição           |
+|-----------|--------|-------------|---------------------|
+| criador   | string | Sim         | Nome do criador     |
+
+### Exemplo de Requisição
+```
+GET /api/urls?criador=empresaX
+```
+
+### Exemplo de Resposta
+```
+Status: 200 OK
+Content-Type: application/json
+
+[
+  {
+    "original_url": "https://www.exemplo.com",
+    "short_id": "uMqaaq",
+    "criador": "empresaX",
+    "data_criacao": "2025-09-08 10:00:00"
+  },
+  ...
+]
+```
+
+---
+
+## 4. Excluir uma URL encurtada
+
+### Endpoint
+```
+DELETE /api/urls/<short_id>
+```
+
+### Exemplo de Requisição
+```
+DELETE /api/urls/uMqaaq
+```
+
+### Exemplo de Resposta
+```
+Status: 204 No Content
+```
+
+---
+
+## Observações
+- Para consumir a API, utilize ferramentas como Postman, Insomnia, cURL ou qualquer biblioteca HTTP.
+- Para integração visual e testes online, recomenda-se implementar o Swagger futuramente.
+- As rotas HTML continuam funcionando normalmente para uso via navegador.
+
+---
+
+## Exemplos cURL
+
+### Encurtar uma URL
+```
+curl -X POST http://localhost:5000/ -H "Content-Type: application/json" -d '{"url": "https://www.exemplo.com", "criador": "empresaX"}'
+```
+
+### Consultar URLs por criador
+```
+curl "http://localhost:5000/api/urls?criador=empresaX"
+```
+
+### Excluir uma URL
+```
+curl -X DELETE http://localhost:5000/api/urls/uMqaaq
+```
