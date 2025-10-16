@@ -23,20 +23,64 @@ def api_shorten():
     if not data or 'url' not in data:
         return jsonify({'error': 'missing_url'}), 400
     original_url = data.get('url')
-    criador = data.get('criador', '')
+    criador = data.get('criador', 'api')
 
-    if not url_shortener.validate_url(original_url):
-        return jsonify({'error': 'invalid_url'}), 400
+    # Usar flags de configuração se desejar
+    if getattr(Config, "VALIDATE_URL_FORMAT", True):
+        if not url_shortener.validate_url(original_url):
+            return jsonify({'error': 'invalid_url'}), 400
 
-    if not url_shortener.is_url_safe(original_url):
-        return jsonify({'error': 'malicious_url'}), 400
+    if getattr(Config, "CHECK_MALICIOUS_URLS", True):
+        if not url_shortener.is_url_safe(original_url):
+            return jsonify({'error': 'malicious_url'}), 400
 
     short_id = url_shortener.generate_unique_short_id(db.short_id_exists)
 
     if not db.save_url(original_url, short_id, criador):
         return jsonify({'error': 'save_error'}), 500
 
-    return jsonify({'urlEncurtada': short_id}), 201
+    return jsonify({
+        'short_id': short_id,
+        'short_url': request.host_url.rstrip('/') + '/' + short_id
+    }), 201
+
+
+# Rota API: obter informação da URL encurtada (JSON)
+@app.route('/api/<short_id>', methods=['GET'])
+def get_api_url(short_id):
+    original_url = db.get_original_url(short_id)
+    if original_url:
+        return jsonify({'original_url': original_url}), 200
+    return jsonify({'error': 'not_found'}), 404
+
+
+# Rota API: deletar URL encurtada
+@app.route('/api/<short_id>', methods=['DELETE'])
+def delete_api_url(short_id):
+    # Tenta deletar; retorna confirmação JSON (cliente atual espera JSON)
+    success = db.delete_url(short_id)
+    if success:
+        return jsonify({'deleted': True, 'short_id': short_id}), 200
+    return jsonify({'error': 'not_found_or_delete_failed'}), 404
+
+
+# Rota API: listar URLs (opcionalmente filtrar por criador)
+@app.route('/api/urls', methods=['GET'])
+def get_api_urls():
+    criador = request.args.get('criador')
+    urls = db.get_all_urls()  # List[Tuple(original_url, short_id, criador, data_criacao)]
+    result = []
+    for original_url, short_id, owner, data_criacao in urls:
+        if criador and owner != criador:
+            continue
+        result.append({
+            'original_url': original_url,
+            'short_id': short_id,
+            'criador': owner,
+            'data_criacao': data_criacao
+        })
+    return jsonify(result), 200
+
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
