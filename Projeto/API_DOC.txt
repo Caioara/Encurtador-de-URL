@@ -1,28 +1,28 @@
 # Documentação da API - Encurtador de URL
 
-Esta documentação explica como utilizar a API REST do encurtador de URL, incluindo exemplos de requisições e respostas.
+Esta documentação descreve os endpoints atuais da API REST do encurtador de URL.
 
 ---
 
-## 1. Encurtar uma URL
+## 1. Encurtar uma URL (API JSON)
 
 ### Endpoint
 ```
-POST /
+POST /api/shorten
 ```
 
 ### Content-Type
 - application/json
 
 ### Parâmetros (JSON)
-| Campo      | Tipo   | Obrigatório | Descrição                |
-|------------|--------|-------------|--------------------------|
-| url        | string | Sim         | URL original a encurtar  |
-| criador    | string | Não         | Nome do criador (opcional, default: "api") |
+| Campo   | Tipo   | Obrigatório | Descrição                                            |
+|---------|--------|-------------|------------------------------------------------------|
+| url     | string | Sim         | URL original a ser encurtada                         |
+| criador | string | Não         | Nome do criador (opcional, default: "api")          |
 
 ### Exemplo de Requisição
 ```
-POST / HTTP/1.1
+POST /api/shorten HTTP/1.1
 Host: localhost:5000
 Content-Type: application/json
 
@@ -38,44 +38,71 @@ Status: 201 Created
 Content-Type: application/json
 
 {
-  "urlEncurtada": "uMqaaq",
-  "urlCompleta": "http://localhost:5000/uMqaaq"
+  "short_id": "uMqaaq",
+  "short_url": "http://localhost:5000/uMqaaq"
 }
 ```
 
-### Exemplo de Resposta (Erro)
-```
-Status: 400 Bad Request
-Content-Type: application/json
-
-{
-  "error": "URL inválida"
-}
-```
+### Erros Comuns
+- 400 Bad Request — {"error":"missing_url"}
+- 400 Bad Request — {"error":"invalid_url"}
+- 400 Bad Request — {"error":"malicious_url"}
+- 500 Internal Server Error — {"error":"save_error"}
 
 ---
 
-## 2. Redirecionar para a URL original
+## 2. Redirecionar para a URL original (navegador / HTML)
 
 ### Endpoint
 ```
 GET /<short_id>
 ```
 
-### Parâmetros
-- short_id: O código da URL encurtada
-
 ### Exemplo
 ```
 GET /uMqaaq
 ```
 
-- Se existir, redireciona para a URL original.
-- Se não existir, retorna página de erro 404.
+- Se existir, redireciona (HTTP 302) para a URL original.
+- Se não existir, retorna página HTML/404.
 
 ---
 
-## 3. Consultar URLs pelo nome do criador (**NOVA ROTA**)
+## 3. Obter informação da URL encurtada (API JSON)
+
+### Endpoint
+```
+GET /api/<short_id>
+```
+
+### Exemplo
+```
+GET /api/uMqaaq
+```
+
+### Resposta (Sucesso)
+```
+Status: 200 OK
+Content-Type: application/json
+
+{
+  "original_url": "https://www.exemplo.com"
+}
+```
+
+### Resposta (Não encontrado)
+```
+Status: 404 Not Found
+Content-Type: application/json
+
+{
+  "error": "not_found"
+}
+```
+
+---
+
+## 4. Consultar URLs (filtrar por criador)
 
 ### Endpoint
 ```
@@ -85,7 +112,7 @@ GET /api/urls?criador=<nome>
 ### Parâmetros de Query
 | Parâmetro | Tipo   | Obrigatório | Descrição           |
 |-----------|--------|-------------|---------------------|
-| criador   | string | Sim         | Nome do criador     |
+| criador   | string | Não         | Nome do criador (se omitido, retorna todas) |
 
 ### Exemplo de Requisição
 ```
@@ -110,45 +137,70 @@ Content-Type: application/json
 
 ---
 
-## 4. Excluir uma URL encurtada
+## 5. Excluir uma URL encurtada (API JSON)
 
 ### Endpoint
 ```
-DELETE /api/urls/<short_id>
+DELETE /api/<short_id>
 ```
 
 ### Exemplo de Requisição
 ```
-DELETE /api/urls/uMqaaq
+DELETE /api/uMqaaq
 ```
 
-### Exemplo de Resposta
+### Exemplo de Resposta (Sucesso)
 ```
-Status: 204 No Content
+Status: 200 OK
+Content-Type: application/json
+
+{
+  "deleted": true,
+  "short_id": "uMqaaq"
+}
+```
+
+### Resposta (Não encontrado ou falha)
+```
+Status: 404 Not Found
+Content-Type: application/json
+
+{
+  "error": "not_found_or_delete_failed"
+}
 ```
 
 ---
 
-## Observações
-- Para consumir a API, utilize ferramentas como Postman, Insomnia, cURL ou qualquer biblioteca HTTP.
-- Para integração visual e testes online, recomenda-se implementar o Swagger futuramente.
-- As rotas HTML continuam funcionando normalmente para uso via navegador.
+## 6. Rotas HTML/adm (navegador)
+
+- GET / — página inicial com formulário para encurtar (envia via form POST e retorna HTML).
+- POST / — formulário HTML para encurtar (não JSON).
+- GET /admin — página administrativa com listagem.
+- GET /delete/<short_id> — exclusão via interface web (redireciona para /admin).
 
 ---
 
-## Exemplos cURL
+## Observações e exemplos cURL
 
-### Encurtar uma URL
+- Para uso por API, prefira os endpoints que iniciam com `/api`.
+- Exemplos cURL:
+
+Encurtar (API JSON):
 ```
-curl -X POST http://localhost:5000/ -H "Content-Type: application/json" -d '{"url": "https://www.exemplo.com", "criador": "empresaX"}'
+curl -X POST http://localhost:5000/api/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://www.exemplo.com","criador":"empresaX"}'
 ```
 
-### Consultar URLs por criador
+Consultar por criador:
 ```
 curl "http://localhost:5000/api/urls?criador=empresaX"
 ```
 
-### Excluir uma URL
+Excluir via API:
 ```
-curl -X DELETE http://localhost:5000/api/urls/uMqaaq
+curl -X DELETE "http://localhost:5000/api/uMqaaq"
 ```
+
+---
