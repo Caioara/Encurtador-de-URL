@@ -62,6 +62,11 @@ Instale as dependências:
 pip install -r requirements.txt
 ```
 
+Comando do flask:
+```
+pip install Flask requests
+```
+
 
 ## 🌐 API utilizada
 A API escolhida foi a Google Safe Browsing API, que tem como função verificar se uma URL é segura ou não. Assim, ao tentar encurtar um link, o sistema consulta a API e valida se o endereço não está listado como malicioso ou perigoso. Essa integração garante que os usuários não encurtem nem compartilhem links inseguros, aumentando a confiabilidade do sistema.
